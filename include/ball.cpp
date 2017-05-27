@@ -6,7 +6,6 @@
 Ball::Ball()
 {
 	position = velocity = sf::Vector2f( 0.0, 0.0 );
-	angle = angular_velocity = 0.0;
 	style = 0;
 }
 
@@ -15,7 +14,6 @@ Ball::Ball( const sf::Vector2f& position_, const sf::Vector2f& velocity_, float 
 {
 	position = position_;
 	velocity = velocity_;
-	angle = angular_velocity = 0.0;
 	radius = radius_;
 	style = style_;
 
@@ -73,20 +71,8 @@ int Ball::update( float time, const Table& table )
 	float speed = sqrt( velocity.x * velocity.x + velocity.y * velocity.y );
 	// velocity normal to a pocket's corner
 	sf::Vector2f normal_velocity;
-	sf::Vector2f tangent_velocity;
 	// a direction from the ball to the corner of a pocket
 	sf::Vector2f normal;
-
-	// rotation setup
-	if ( angular_velocity > MAX_ANG_SPEED )
-		angular_velocity = MAX_ANG_SPEED;
-	if ( angular_velocity >= MIN_ANG_SPEED )
-	{
-		angle += angular_velocity * time;
-		angular_velocity -= time * ANGULAR_FRICTION;
-	}
-	else
-		angular_velocity = 0.0;
 
 	// moving the ball as if there were no borders
 	if ( speed > MIN_SPEED )
@@ -131,8 +117,6 @@ int Ball::update( float time, const Table& table )
 			float normal_length = getLength( normal );
 			normal /= normal_length;
 			normal_velocity = normal * getScalar( velocity, normal );
-			tangent_velocity = velocity - normal_velocity;
-			tangent_velocity += getNorm( tangent_velocity ) * angular_velocity;
 			velocity -= normal_velocity * ( 1.0f + BORDER_REFLECTION );
 			position += velocity * time;
 			return 1;
@@ -147,13 +131,11 @@ int Ball::update( float time, const Table& table )
 		{
 			position.y = ( table.borders[0].y + radius ) * 2 - position.y;
 			velocity.y = -velocity.y * BORDER_REFLECTION;
-			velocity.x -= angular_velocity * BORDER_ANG_COEFF;
 		}
 		if ( position.y > table.borders[6].y - radius )
 		{
 			position.y = ( table.borders[6].y - radius ) * 2 - position.y;
 			velocity.y = -velocity.y * BORDER_REFLECTION;
-			velocity.x += angular_velocity * BORDER_ANG_COEFF;
 		}
 	}
 
@@ -164,13 +146,11 @@ int Ball::update( float time, const Table& table )
 		{
 			position.x = ( table.borders[5].x - radius ) * 2 - position.x;
 			velocity.x = -velocity.x * BORDER_REFLECTION;
-			velocity.y -= angular_velocity * BORDER_ANG_COEFF;
 		}
 		if ( position.x < table.borders[10].x + radius )
 		{
 			position.x = ( table.borders[10].x + radius ) * 2 - position.x;
 			velocity.x = -velocity.x * BORDER_REFLECTION;
-			velocity.y += angular_velocity * BORDER_ANG_COEFF;
 		}
 	}
 
@@ -180,9 +160,6 @@ int Ball::update( float time, const Table& table )
 void Ball::draw( sf::RenderWindow& window)
 {
 	sprite.setTexture( texture );
-	sprite.setPosition( position );
-	sf::Vector2u circleSize = texture.getSize();
-	sprite.setOrigin( circleSize.x / 2, circleSize.y / 2 );
-	sprite.setRotation( angle );
+	sprite.setPosition( position - sf::Vector2f( radius, radius ) );
 	window.draw( sprite );
 }

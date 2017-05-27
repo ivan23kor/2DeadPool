@@ -26,12 +26,6 @@ Billiard::Billiard( const sf::Vector2f& position_, const sf::Vector2f& direction
 
 Billiard::~Billiard() {}
 
-void Billiard::setRotation( const sf::Vector2f& mousePosition_ )
-{
-	direction = position - mousePosition_;
-	sprite.setRotation( 142 + atan2f( direction.y, direction.x ) * 180 / PI );
-}
-
 sf::Vector2f Billiard::setHit( sf::RenderWindow& window, Table& table, Score& score, int player_number )
 {
 	// hit power
@@ -114,12 +108,41 @@ sf::Vector2f Billiard::setHit( sf::RenderWindow& window, Table& table, Score& sc
 		initial_power = getLength( mouse_position - position );
 	}
 
+	hitAnimation( window, table, score, player_number, power );
+
 	return getNorm( direction ) * power;
 }
 
-void Billiard::draw( sf::RenderWindow& window, float ball_radius )
+void Billiard::hitAnimation( sf::RenderWindow& window, Table& table, Score& score, int player_number, float power )
 {
-	setRotation( sf::Vector2f( sf::Mouse::getPosition( window ) ) );
-	sprite.setPosition( position - getNorm( direction ) * ball_radius );
-	window.draw( sprite );
+	float step = power * power * ANIMATION_STEP;
+	float current_interval = power * PULL_BACK;
+	sf::Vector2f initial_position = sprite.getPosition() + getNorm( direction ) * current_interval;
+
+	while ( window.isOpen() && ( current_interval > 0 ) )
+	{
+		sf::Event event;
+		while ( window.pollEvent( event ) )
+		{
+			if ( event.type == sf::Event::Closed )
+				window.close();
+		}
+
+		// setting the position closer to the cue ball each step
+		current_interval -= step * PULL_BACK;
+		sprite.setPosition( initial_position - getNorm( direction ) * current_interval );
+
+		// displaying everything
+        window.clear( sf::Color( 0, 100, 0, 0 ) );
+        table.draw( window );
+        window.draw( sprite );
+        score.draw( window, player_number );
+        window.display();
+	}
+}
+
+void Billiard::setRotation( const sf::Vector2f& mousePosition_ )
+{
+	direction = position - mousePosition_;
+	sprite.setRotation( 142 + atan2f( direction.y, direction.x ) * 180 / PI );
 }

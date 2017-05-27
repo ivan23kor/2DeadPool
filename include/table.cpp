@@ -100,7 +100,6 @@ int Table::update( float time, Score& score, int& player_number )
     sf::Vector2f rel_distance( 0, 0 );
     sf::Vector2f vel_difference( 0, 0 );
     sf::Vector2f delta_velocity( 0, 0 );
-    float delta_angular_velocity = 0.0;
     bool zero_score = ( score.players[0].score == 0 ) && ( score.players[1].score == 0 );
     int function_return = OK;
 
@@ -117,10 +116,6 @@ int Table::update( float time, Score& score, int& player_number )
                 delta_velocity = getNorm( rel_distance ) * getScalar( vel_difference, getNorm( rel_distance ) );
                 balls[i].velocity += delta_velocity * BALL_REFLECTION;
                 balls[j].velocity -= delta_velocity * BALL_REFLECTION;
-                delta_angular_velocity = getScalar( getNorm( rel_distance ), getNorm( balls[i].velocity ) )
-                	* getLength( vel_difference ) * ANGULAR_COEFF;
-                balls[i].angular_velocity += delta_angular_velocity;
-                balls[j].angular_velocity += delta_angular_velocity;
             }
         }
 
@@ -174,7 +169,7 @@ int Table::balls_stopped() const
 	int stop_flag = 1;
 	sf::Vector2f null_vector( 0, 0 );
 	for (int i = 0; i < balls.size(); ++i)
-		if ( ( balls[i].velocity != null_vector ) && ( balls[i].angular_velocity == 0.0 ) )
+		if ( balls[i].velocity != null_vector )
 			stop_flag = 0;
 
 	return stop_flag;

@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
 #define BALL_COUNT 16
 #define TABLE_WIDTH .8

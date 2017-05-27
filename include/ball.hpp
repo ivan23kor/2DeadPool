@@ -3,22 +3,15 @@
 #include "table.hpp"
 
 #define MIN_SPEED 1e-2f
-#define MIN_ANG_SPEED 1e-6f
-#define MAX_ANG_SPEED 2e0f
 #define FRICTION 26e-5f
 #define BORDER_REFLECTION .5f
 #define BALL_REFLECTION .75f
-#define ANGULAR_COEFF 5e0f
-#define ANGULAR_FRICTION 1e-3f
-#define BORDER_ANG_COEFF 3e-3f
 
 class Ball
 {
 	// movement properties
 	sf::Vector2f position;							// the position of the center of the ball
 	sf::Vector2f velocity;							// the velocity of the ball
-	float angular_velocity;
-	float angle;
 
 	// material properties
 	float radius;									// the radius of the ball

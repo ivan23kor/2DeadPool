@@ -7,6 +7,7 @@
 #define MAX_POWER 7
 #define MIN_POWER .1f
 #define PULL_BACK 20.0f
+#define ANIMATION_STEP 1e-2f
 
 class Billiard
 {
@@ -16,7 +17,8 @@ class Billiard
 	sf::Texture texture;
 	sf::Sprite sprite;
 
-	void draw( sf::RenderWindow& window, float ball_radius );
+	void hitAnimation( sf::RenderWindow& window, Table& table, Score& score, int player_number, float power );
+	void setRotation( const sf::Vector2f& mousePosition_ );
 
 	friend class Table;
 
@@ -24,8 +26,6 @@ public:
 	Billiard();
 	Billiard( const sf::Vector2f& position_, const sf::Vector2f& direction_, const std::string& filename );
 	~Billiard();
-
-	void setRotation( const sf::Vector2f& mousePosition_ );
 
 	sf::Vector2f setHit( sf::RenderWindow& window, Table& table, Score& score, int player_number );
 };

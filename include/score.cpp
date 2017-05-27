@@ -29,14 +29,19 @@ Score::~Score() {}
 
 void Score::add_ball( Ball& ball, int player_number )
 {
-	ball.angular_velocity = 0.0;
 	int where_to_put = ( ball.style < BALL7 ) ^ ( players[0].ball_type == 0 );
 	if ( ball.style == BALL7 )
 	{
 		if ( player_number == 0 )
+		{
 			ball.position = left_score + sf::Vector2f( 0, ball.radius * 2.5f * players[player_number].score );
+			players[0].score++;	
+		}
 		else
+		{
 			ball.position = right_score + sf::Vector2f( 0, ball.radius * 2.5f * players[player_number].score );
+			players[1].score++;
+		}
 	}
 	else if ( where_to_put == 0)
 	{
