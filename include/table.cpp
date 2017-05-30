@@ -89,8 +89,7 @@ Table::Table( const sf::Vector2f& position_, const sf::VideoMode& video_mode,
 	sprite.setPosition( position - sf::Vector2f( width / 2, height / 2 ) );
 
 	//billiard setup
-	sf::Vector2f null_vector( 0, 0 );
-	billiard.push_back( Billiard( null_vector, null_vector, billiard_file ) );
+	billiard.push_back( Billiard( balls.back().position, sf::Vector2f( 1, 0 ), billiard_file ) );
 }
 
 Table::~Table()	{}
@@ -186,15 +185,12 @@ void Table::setHit( sf::RenderWindow& window, Score& score, int player_number )
     	float right_border = this->borders[4].x - balls[CUE_BALL].radius;
     	float upper_border = this->borders[0].y + balls[CUE_BALL].radius;
     	float lower_border = this->borders[9].y - balls[CUE_BALL].radius;
-
-       	while ( !( sf::Mouse::isButtonPressed( sf::Mouse::Left ) ) );
-	       	score.draw( window, player_number );
-    	while ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) && ( window.isOpen() ) )
+    	while ( 1 )
     	{
-    		while ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) && ( window.isOpen() ) )
-    		{
+    		while ( 1 )
+	    	{
 		        // check all the window's events that were triggered since the last iteration of the loop
-		        sf::Event event; 
+		        sf::Event event;
 		        while ( window.pollEvent( event ) )
 		        {
 		            // close the window if closure was triggered
@@ -221,7 +217,6 @@ void Table::setHit( sf::RenderWindow& window, Score& score, int player_number )
 	    		for (int i = 0; i < balls.size() - 1; ++i)
 	    			if ( getInterval( possible_position, balls[i].position ) < balls[CUE_BALL].radius * 2.0f )
 	    				possible_position = sf::Vector2f( -1, -1 ) * balls[CUE_BALL].radius;
-
 	    		balls[CUE_BALL].position = possible_position;
 
 	    		// table display
@@ -229,19 +224,46 @@ void Table::setHit( sf::RenderWindow& window, Score& score, int player_number )
 		        this->draw( window );
 		        score.draw( window, player_number );
 		        window.display();
+
+    			if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+	    			break;
+	    		if ( !window.isOpen() )
+	    			return;
 	    	}
 	    
 	    	if ( balls[CUE_BALL].position == sf::Vector2f( -1 , -1 ) * balls[CUE_BALL].radius )
-	    		while ( !( sf::Mouse::isButtonPressed( sf::Mouse::Left ) ) )
-	    			score.draw( window, player_number );
+	    	{
+	    		while ( 1 )
+		    	{
+		    		sf::Event event;
+			        while ( window.pollEvent( event ) )
+			        {
+			            // close the window if closure was triggered
+			            if ( event.type == sf::Event::Closed )
+			            {
+			                window.close();
+				            return;
+			            }
+			        }
+		    		if ( !sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+		    			break;
+		    		if ( !window.isOpen() )
+		    			return;
+		    	}
+		    }
+
+		    if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+	    			break;
+	    		if ( !window.isOpen() )
+	    			return;
     	}
     }
 
-	// hit setup
-	while ( !( sf::Mouse::isButtonPressed( sf::Mouse::Left ) ) && ( window.isOpen() ) )
-	{
-		// check all the window's events that were triggered since the last iteration of the loop
-        sf::Event event; 
+
+    // hit setup
+    while ( 1 )
+    {
+		sf::Event event; 
         while ( window.pollEvent( event ) )
         {
             // close the window if closure was triggered
@@ -251,8 +273,16 @@ void Table::setHit( sf::RenderWindow& window, Score& score, int player_number )
 	            return;
             }
         }
-		score.draw( window, player_number );
-	}
+		if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+			break;
+		if ( !window.isOpen() )
+			return;
+		// table display
+        window.clear( sf::Color( 0, 100, 0, 0 ) );
+        this->draw( window );
+        score.draw( window, player_number );
+        window.display();
+    }
     billiard[0].position = balls[CUE_BALL].position;
     hit_velocity = billiard[0].setHit( window, *this, score, player_number );
     balls[balls.size() - 1].velocity = hit_velocity;
@@ -263,4 +293,5 @@ void Table::draw( sf::RenderWindow& window )
     window.draw( sprite );
     for (int i = 0; i < balls.size(); ++i)
 		balls[i].draw( window );
+	billiard[0].draw( window, balls[CUE_BALL].radius );
 }

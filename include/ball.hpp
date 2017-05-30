@@ -22,7 +22,7 @@ class Ball
 	int style;
 
 	int update( float time, const Table& table );	// moves the ball, returns 0 if got into a pocket
-	void draw( sf::RenderWindow &window ); 			// draws the ball
+	void draw( sf::RenderWindow& window ); 			// draws the ball
 
 	friend class Table;
 	friend class Billiard;

@@ -10,8 +10,12 @@
 #define TIME_CONSTANT 2.5e3f
 #define EARLY_END 2
 #define WIN_SCORE 8
+#define SLEEP_TIME 20
 
-int game( sf::RenderWindow& window, Table& table, Score& score );
+sf::Mutex mutex;
+
+void draw( sf::RenderWindow* window, Table& table, Score& score, int& player_number );
+int game( const sf::VideoMode& video_mode, Table& table, Score& score );
 
 int main(int argc, char const *argv[])
 {
@@ -35,10 +39,8 @@ int main(int argc, char const *argv[])
     const std::string font_file = "../bin/Lithograph-Bold.ttf";
     Score score( video_mode, player_names[0], player_names[1], font_file );
 
-    // create a fullscreen window
-    sf::RenderWindow window( video_mode, "2DeadPool", sf::Style::Fullscreen );
-    int game_result = game( window, table, score );
-
+    // game start
+    int game_result = game( video_mode, table, score );
     if ( game_result == EARLY_END )
         std::cout << "See ya later" << std::endl;
     else
@@ -47,7 +49,41 @@ int main(int argc, char const *argv[])
 	return 0;
 }
 
-int game( sf::RenderWindow& window, Table& table, Score& score )
+/*void draw( sf::RenderWindow* window, Table& table, Score& score, int& player_number )
+{
+    // run the program as long as the window is open
+    while ( 1 )
+    {
+        mutex.lock();
+        if ( window->isOpen() )
+        {
+            // check all the window's events that were triggered since the last iteration of the loop
+            sf::Event event; 
+            while ( window->pollEvent( event ) )
+            {
+                // close the window if closure was triggered
+                if ( event.type == sf::Event::Closed )
+                    window->close();
+            }
+
+            // table display
+            window->clear( sf::Color( 0, 100, 0, 0 ) );
+            table.draw( *window );
+            score.draw( *window, player_number );
+            window->display();
+            mutex.unlock();
+            sf::sleep( sf::milliseconds( SLEEP_TIME ) );
+        }
+        else
+        {
+            mutex.unlock();
+            sf::sleep( sf::milliseconds( SLEEP_TIME ) );
+            return;
+        }
+    }
+}*/
+
+int game( const sf::VideoMode& video_mode, Table& table, Score& score )
 {
     // clock for the independence from CPU speed
     sf::Clock clock;
@@ -55,13 +91,12 @@ int game( sf::RenderWindow& window, Table& table, Score& score )
     float previous_time = time.asMicroseconds();
     float dt = 0.0;
 
-    // deisgnates the end of the turn
+    // flags for turns change
     int turn_flag = 0;
-    // specifies whose turn it is
-    int player_number = 0;
-    // has a higher priority than the turn_flag
     int cue_foul_flag = 0;
     int game_lost_flag = 0;
+    // specifies whose turn it is
+    int player_number = 0;
 
     // needed for changing turns
     std::vector<int> previous_score( 2 );
@@ -74,8 +109,15 @@ int game( sf::RenderWindow& window, Table& table, Score& score )
     // == 0 when player1 wins, ==1 otherwise
     int update_result = 0;
 
+    // create a window;
+    sf::RenderWindow window( video_mode, "2DeadPool", sf::Style::Fullscreen );
+
+    // starting the thread that draws everything
+    //sf::Thread thread_draw( std::bind( &draw, &window, table, score, player_number ) );
+    //thread_draw.launch();
+
     // run the program as long as the window is open
-    while ( window.isOpen() )
+    while ( 1 )
     {
         // check all the window's events that were triggered since the last iteration of the loop
         sf::Event event; 
@@ -83,7 +125,10 @@ int game( sf::RenderWindow& window, Table& table, Score& score )
         {
             // close the window if closure was triggered
             if ( event.type == sf::Event::Closed )
+            {
                 window.close();
+                break;
+            }
         }
 
         // if ball8 was shot earlier than all the player's balls
@@ -110,8 +155,9 @@ int game( sf::RenderWindow& window, Table& table, Score& score )
         }
 
         // set hit
-        if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) && ( table.balls_stopped() == 1 ) )
+        if ( table.balls_stopped() == 1 )
         {
+            //sf::Mouse::isButtonPressed( sf::Mouse::Left )
             table.setHit( window, score, player_number );
             turn_flag = 1;
         }
@@ -121,6 +167,8 @@ int game( sf::RenderWindow& window, Table& table, Score& score )
         dt = time.asMicroseconds() - previous_time;
         previous_time = time.asMicroseconds();
         update_result = table.update( 1.0f, score, player_number );
+        if ( !window.isOpen() )
+            break;
 
         // update return processing
         switch ( update_result )
@@ -142,13 +190,3 @@ int game( sf::RenderWindow& window, Table& table, Score& score )
 
     return EARLY_END;
 }
-
-/*
-// hint line setup
-sf::Vertex line[] =
-{
-    position,
-    position + getNorm( direction ) * HINT;
-};
-window.draw(line, 2, sf::Lines);
-*/
