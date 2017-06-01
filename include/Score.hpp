@@ -1,10 +1,11 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "ball.hpp"
 
 #define MINOR_FONT_SIZE 25
 #define MAJOR_FONT_SIZE 45
 #define BALL7 7
+
+class Ball;
 
 struct Player
 {
@@ -18,6 +19,9 @@ class Score
 	// the scores of the players
 	std::vector<Player> players;
 
+	// the names of the players
+	std::vector<std::string> player_names;
+
 	// scores' positions
 	sf::Vector2f left_score, right_score;
 
@@ -25,15 +29,18 @@ class Score
 	sf::Font font;
 
 	// puts the balls got into a pocket to the appropriate score
-	void add_ball( Ball& ball, int player_number );
+	void AddBall( Ball& ball, int player_number );
 
 	friend class Table;
+	friend class Game;
 
 public:
-	Score( const sf::VideoMode& video_mode,	const std::string& player_name1,
-		const std::string& player_name2, const std::string& font_file );
+	Score() {};
+	Score(const Score& score);
+	Score( const sf::VideoMode& video_mode,	const std::vector<std::string>& player_names_,
+		const std::string& font_file );
 	~Score();
 
-	void draw( sf::RenderWindow& window, const int player_number );
-	std::vector<int> getScore() const;
+	void Draw( sf::RenderWindow& window, int player_number );
+	std::vector<int> GetScore() const;
 };

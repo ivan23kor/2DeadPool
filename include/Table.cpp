@@ -1,27 +1,27 @@
 #include <cmath>
 #include <iostream>
-#include "table.hpp"
-#include "ball.hpp"
-#include "billiard.hpp"
-#include "score.hpp"
+#include "Table.hpp"
+#include "Ball.hpp"
+#include "Billiard.hpp"
+#include "Score.hpp"
 #include "vector_operations.hpp"
 
-Table::Table( const sf::Vector2f& position_, const sf::VideoMode& video_mode,
-	const std::string& table_file, const std::string& ball_file, const std::string& billiard_file )
+Table::Table( const sf::VideoMode& video_mode,	const std::string& table_file,
+	const std::string& ball_file, const std::string& billiard_file )
 {
 	// general initialization
-	position = position_;
-	width = video_mode.width * TABLE_WIDTH;
-	height = video_mode.height * TABLE_HEIGHT;
+	position = sf::Vector2f( video_mode.width / 2, video_mode.height * 11 / 20 );
+	dimensions.x = video_mode.width * .8f;
+	dimensions.y = video_mode.height * .8f;
 
 	// determining the scale factor
 	texture.loadFromFile( table_file );
 	sf::Vector2f texture_size( texture.getSize() );
-	sf::Vector2f scale( width / texture_size.x, height / texture_size.y );
+	sf::Vector2f scale( dimensions.x / texture_size.x, dimensions.y / texture_size.y );
 
 	// pockets' radii setup
-	corner_radius = 90 * height / 1775 * scale.y;
-	middle_radius = 75 * height / 1775 * scale.y;
+	corner_radius = 90 * dimensions.y / 1775 * scale.y;
+	middle_radius = 75 * dimensions.y / 1775 * scale.y;
 
 	// borders setup
 	borders.push_back(sf::Vector2f(79, 50));
@@ -41,7 +41,7 @@ Table::Table( const sf::Vector2f& position_, const sf::VideoMode& video_mode,
 	{
 		borders[i].x *= scale.x;
 		borders[i].y *= scale.y;
-		borders[i] += position - sf::Vector2f( width / 2, height / 2 );
+		borders[i] += position - sf::Vector2f( dimensions.x / 2, dimensions.y / 2 );
 	}
 
 	// pockets setup
@@ -56,11 +56,11 @@ Table::Table( const sf::Vector2f& position_, const sf::VideoMode& video_mode,
 	{
 		pockets[i].x *= scale.x;
 		pockets[i].y *= scale.y;
-		pockets[i] += position - sf::Vector2f( width / 2, height / 2 );
+		pockets[i] += position - sf::Vector2f( dimensions.x / 2, dimensions.y / 2 );
 	}
 
 	// balls initialization
-	float ball_radius = 44 * height * scale.y / 1775;
+	float ball_radius = BALL_RADIUS * dimensions.y * scale.y / 1775;
 	sf::Vector2f null_velocity( 0, 0 );
 	std::vector<sf::Vector2f> ball_positions( BALL_COUNT ); // relatively to the table's center
 	ball_positions[0] = sf::Vector2f( ball_radius * 2 * sqrt(3), -ball_radius * 2 );
@@ -78,23 +78,37 @@ Table::Table( const sf::Vector2f& position_, const sf::VideoMode& video_mode,
 	ball_positions[12] = sf::Vector2f( ball_radius * 4 * sqrt(3), 0 );
 	ball_positions[13] = sf::Vector2f( ball_radius * 3 * sqrt(3), -ball_radius * 3 );
 	ball_positions[14] = sf::Vector2f( ball_radius * 2 * sqrt(3), ball_radius * 2 );
-	ball_positions[15] = sf::Vector2f( width * (-.5), 0 );
+	ball_positions[15] = sf::Vector2f( dimensions.x * (-.5), 0 );
 	for (int i = 0; i < BALL_COUNT; ++i)
-		balls.push_back( Ball( sf::Vector2f( ball_positions[i].x * scale.x / SCALE_X, ball_positions[i].y * scale.y / SCALE_Y )
-			+ position + sf::Vector2f( width / 4 * scale.x / SCALE_X, 0 ), null_velocity, ball_radius, ball_file, i ) );
+		balls.push_back( Ball( sf::Vector2f( ball_positions[i].x * scale.x / SCALE_X, ball_positions[i].y * scale.y
+			/ SCALE_Y )	+ position + sf::Vector2f( dimensions.x / 4 * scale.x / SCALE_X, 0 ), ball_radius, ball_file, i ) );
 	
 	// graphical initialization
 	sprite.setTexture( texture );
 	sprite.setScale( scale );
-	sprite.setPosition( position - sf::Vector2f( width / 2, height / 2 ) );
+	sprite.setPosition( position - sf::Vector2f( dimensions.x / 2, dimensions.y / 2 ) );
 
 	//billiard setup
-	billiard.push_back( Billiard( balls.back().position, sf::Vector2f( 1, 0 ), billiard_file ) );
+	billiard.push_back( Billiard( balls.back().position, billiard_file ) );
+}
+
+Table::Table( const Table& table )
+{
+	this->position = table.position;
+	this->dimensions = table.dimensions;
+	this->corner_radius = table.corner_radius;
+	this->middle_radius = table.middle_radius;
+	this->pockets = table.pockets;
+	this->borders = table.borders;
+	this->balls = table.balls;
+	this->billiard = table.billiard;
+	this->texture = table.texture;
+	this->sprite = table.sprite;
 }
 
 Table::~Table()	{}
 
-int Table::update( float time, Score& score, int& player_number )
+int Table::Update( float time, Score& score, int& player_number )
 {
     sf::Vector2f rel_distance( 0, 0 );
     sf::Vector2f vel_difference( 0, 0 );
@@ -118,7 +132,7 @@ int Table::update( float time, Score& score, int& player_number )
             }
         }
 
-        if ( balls[i].update( time, *this ) == 0 )
+        if ( balls[i].Update( time, *this ) == 0 )
         {
         	if ( zero_score )
         	{
@@ -126,7 +140,7 @@ int Table::update( float time, Score& score, int& player_number )
         		if ( i < 7 )
         		{
         			score.players[1 - player_number].ball_type = 1;
-        			score.add_ball( balls[i], player_number );
+        			score.AddBall( balls[i], player_number );
         		}
     			else if ( i == CUE_BALL )
     			{
@@ -135,13 +149,13 @@ int Table::update( float time, Score& score, int& player_number )
     			}
     			else if ( i == 7 )
     			{
-    				score.add_ball( balls[i], player_number );
+    				score.AddBall( balls[i], player_number );
     				function_return = GAME_LOST;
     			}
         		else
         		{
     				score.players[player_number].ball_type = 1;
-    				score.add_ball( balls[i], player_number );
+    				score.AddBall( balls[i], player_number );
     			}
         	}
         	else if ( i == CUE_BALL )
@@ -152,18 +166,18 @@ int Table::update( float time, Score& score, int& player_number )
         	}
         	else if ( ( i == BALL7 ) && ( score.players[player_number].score != BALL7 ) )
         		{
-        			score.add_ball( balls[i], player_number );
+        			score.AddBall( balls[i], player_number );
         			function_return = GAME_LOST;
         		}
         	else
-       			score.add_ball( balls[i], player_number );
+       			score.AddBall( balls[i], player_number );
         }
     }
 
     return function_return;
 }
 
-int Table::balls_stopped() const
+int Table::BallsStopped() const
 {
 	int stop_flag = 1;
 	sf::Vector2f null_vector( 0, 0 );
@@ -174,23 +188,65 @@ int Table::balls_stopped() const
 	return stop_flag;
 }
 
-void Table::setHit( sf::RenderWindow& window, Score& score, int player_number )
+void Table::SetCueBall( sf::RenderWindow& window, Score& score, int player_number )
 {
-    sf::Vector2f hit_velocity( 0, 0 );
+	sf::Vector2f possible_position;
+	float left_border = this->borders[11].x + balls[CUE_BALL].radius;
+	float right_border = this->borders[4].x - balls[CUE_BALL].radius;
+	float upper_border = this->borders[0].y + balls[CUE_BALL].radius;
+	float lower_border = this->borders[9].y - balls[CUE_BALL].radius;
 
-    if ( balls[CUE_BALL].position == sf::Vector2f( -1, -1 ) * balls[CUE_BALL].radius )
-    {
-    	sf::Vector2f possible_position;
-    	float left_border = this->borders[11].x + balls[CUE_BALL].radius;
-    	float right_border = this->borders[4].x - balls[CUE_BALL].radius;
-    	float upper_border = this->borders[0].y + balls[CUE_BALL].radius;
-    	float lower_border = this->borders[9].y - balls[CUE_BALL].radius;
-    	while ( 1 )
+	while ( 1 )
+	{
+		while ( 1 )
+    	{
+	        // check all the window's events that were triggered since the last iteration of the loop
+	        sf::Event event;
+	        while ( window.pollEvent( event ) )
+	        {
+	            // close the window if closure was triggered
+	            if ( event.type == sf::Event::Closed )
+	            {
+	                window.close();
+		            return;
+	            }
+	        }
+	        if ( !window.isOpen() )
+    			return;
+
+    		possible_position = sf::Vector2f( sf::Mouse::getPosition( window ) );
+
+    		// check for out of table displacement
+    		if ( possible_position.x < left_border )
+    			possible_position.x = left_border;
+    		if ( possible_position.x > right_border )
+    			possible_position.x = right_border;
+    		if ( possible_position.y < upper_border )
+    			possible_position.y = upper_border;
+    		if ( possible_position.y > lower_border )
+    			possible_position.y = lower_border;
+
+    		// check for other balls on the same place
+    		for (int i = 0; i < balls.size() - 1; ++i)
+    			if ( getInterval( possible_position, balls[i].position ) < balls[CUE_BALL].radius * 2.0f )
+    				possible_position = sf::Vector2f( -1, -1 ) * balls[CUE_BALL].radius;
+    		balls[CUE_BALL].position = possible_position;
+
+    		// table display
+	        window.clear( sf::Color( 0, 100, 0, 0 ) );
+	        this->Draw( window );
+	        score.Draw( window, player_number );
+	        window.display();
+
+			if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+    			break;
+    	}
+    
+    	if ( balls[CUE_BALL].position == sf::Vector2f( -1 , -1 ) * balls[CUE_BALL].radius )
     	{
     		while ( 1 )
 	    	{
-		        // check all the window's events that were triggered since the last iteration of the loop
-		        sf::Event event;
+	    		sf::Event event;
 		        while ( window.pollEvent( event ) )
 		        {
 		            // close the window if closure was triggered
@@ -200,65 +256,26 @@ void Table::setHit( sf::RenderWindow& window, Score& score, int player_number )
 			            return;
 		            }
 		        }
-
-	    		possible_position = sf::Vector2f( sf::Mouse::getPosition( window ) );
-
-	    		// check for out of table displacement
-	    		if ( possible_position.x < left_border )
-	    			possible_position.x = left_border;
-	    		if ( possible_position.x > right_border )
-	    			possible_position.x = right_border;
-	    		if ( possible_position.y < upper_border )
-	    			possible_position.y = upper_border;
-	    		if ( possible_position.y > lower_border )
-	    			possible_position.y = lower_border;
-
-	    		// check for other balls on the same place
-	    		for (int i = 0; i < balls.size() - 1; ++i)
-	    			if ( getInterval( possible_position, balls[i].position ) < balls[CUE_BALL].radius * 2.0f )
-	    				possible_position = sf::Vector2f( -1, -1 ) * balls[CUE_BALL].radius;
-	    		balls[CUE_BALL].position = possible_position;
-
-	    		// table display
-		        window.clear( sf::Color( 0, 100, 0, 0 ) );
-		        this->draw( window );
-		        score.draw( window, player_number );
-		        window.display();
-
-    			if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+	    		if ( !sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
 	    			break;
 	    		if ( !window.isOpen() )
 	    			return;
 	    	}
-	    
-	    	if ( balls[CUE_BALL].position == sf::Vector2f( -1 , -1 ) * balls[CUE_BALL].radius )
-	    	{
-	    		while ( 1 )
-		    	{
-		    		sf::Event event;
-			        while ( window.pollEvent( event ) )
-			        {
-			            // close the window if closure was triggered
-			            if ( event.type == sf::Event::Closed )
-			            {
-			                window.close();
-				            return;
-			            }
-			        }
-		    		if ( !sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
-		    			break;
-		    		if ( !window.isOpen() )
-		    			return;
-		    	}
-		    }
+	    }
 
-		    if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
-	    			break;
-	    		if ( !window.isOpen() )
-	    			return;
-    	}
-    }
+	    if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
+    			break;
+    		if ( !window.isOpen() )
+    			return;
+	}
+}
 
+void Table::SetHit( sf::RenderWindow& window, Score& score, int player_number )
+{
+    sf::Vector2f hit_velocity( 0, 0 );
+
+    if ( balls[CUE_BALL].position == sf::Vector2f( -1, -1 ) * balls[CUE_BALL].radius )
+		this->SetCueBall( window, score, player_number );
 
     // hit setup
     while ( 1 )
@@ -273,25 +290,26 @@ void Table::setHit( sf::RenderWindow& window, Score& score, int player_number )
 	            return;
             }
         }
+        if ( !window.isOpen() )
+			return;
 		if ( sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
 			break;
-		if ( !window.isOpen() )
-			return;
 		// table display
         window.clear( sf::Color( 0, 100, 0, 0 ) );
-        this->draw( window );
-        score.draw( window, player_number );
+        this->Draw( window );
+        score.Draw( window, player_number );
         window.display();
     }
     billiard[0].position = balls[CUE_BALL].position;
-    hit_velocity = billiard[0].setHit( window, *this, score, player_number );
-    balls[balls.size() - 1].velocity = hit_velocity;
+    hit_velocity = billiard[0].SetHit( window, *this, score, player_number );
+    balls.back().velocity = hit_velocity;
 }
 
-void Table::draw( sf::RenderWindow& window )
+void Table::Draw( sf::RenderWindow& window )
 {
+	sprite.setTexture( texture );
     window.draw( sprite );
     for (int i = 0; i < balls.size(); ++i)
-		balls[i].draw( window );
-	billiard[0].draw( window, balls[CUE_BALL].radius );
+		balls[i].Draw( window );
+	billiard[0].Draw( window, balls[CUE_BALL].radius );
 }

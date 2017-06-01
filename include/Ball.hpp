@@ -1,11 +1,13 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "table.hpp"
 
+#define BALL_RADIUS 40
 #define MIN_SPEED 1e-2f
 #define FRICTION 26e-5f
 #define BORDER_REFLECTION .5f
-#define BALL_REFLECTION .75f
+#define BALL_REFLECTION .9f
+
+class Table;
 
 class Ball
 {
@@ -21,16 +23,16 @@ class Ball
 	sf::Sprite sprite;
 	int style;
 
-	int update( float time, const Table& table );	// moves the ball, returns 0 if got into a pocket
-	void draw( sf::RenderWindow& window ); 			// draws the ball
+	int Update( float time, const Table& table );	// moves the ball, returns 0 if got into a pocket
+	void Draw( sf::RenderWindow& window ); 			// draws the ball
 
 	friend class Table;
 	friend class Billiard;
 	friend class Score;
+	friend class Game;
 
 public:
-	Ball();
-	Ball( const sf::Vector2f& position_, const sf::Vector2f& velocity_, float radius_,
+	Ball( const sf::Vector2f& position_, float radius_,
 		const std::string& name, int style_ );
 	~Ball();
 };

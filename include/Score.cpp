@@ -1,20 +1,24 @@
-#include "score.hpp"
+#include "Score.hpp"
+#include "Ball.hpp"
+#include <iostream>
 
-Score::Score( const sf::VideoMode& video_mode,	const std::string& player_name1,
-		const std::string& player_name2, const std::string& font_file )
+Score::Score( const sf::VideoMode& video_mode, const std::vector<std::string>& player_names_,
+	const std::string& font_file )
 {
 	// load the font from file
 	font.loadFromFile( font_file );
+
+	player_names = player_names_;
 
 	// players initialization
 	Player temp_player;
 	temp_player.score = 0;
 	temp_player.ball_type = 0;
-	temp_player.text = sf::Text( player_name1, font );
+	temp_player.text = sf::Text( player_names[0], font );
 	temp_player.text.setCharacterSize( MAJOR_FONT_SIZE );
 	temp_player.text.setPosition( sf::Vector2f( video_mode.width / 8, video_mode.height / 15 ) );
 	players.push_back( temp_player );
-	temp_player.text = sf::Text( player_name2, font );
+	temp_player.text = sf::Text( player_names[1], font );
 	temp_player.text.setColor( sf::Color::Black );
 	temp_player.text.setCharacterSize( MINOR_FONT_SIZE );
 	temp_player.text.setPosition( sf::Vector2f( video_mode.width * 2 / 3, video_mode.height / 15 ) );
@@ -25,9 +29,17 @@ Score::Score( const sf::VideoMode& video_mode,	const std::string& player_name1,
     right_score = sf::Vector2f( video_mode.width * 19 / 20, video_mode.height / 10 );
 }
 
+Score::Score(const Score& score)
+{
+	this->players = score.players;
+	this->left_score = score.left_score;
+	this->right_score = score.right_score;
+	this->font = score.font;
+}
+
 Score::~Score() {}
 
-void Score::add_ball( Ball& ball, int player_number )
+void Score::AddBall( Ball& ball, int player_number )
 {
 	int where_to_put = ( ball.style < BALL7 ) ^ ( players[0].ball_type == 0 );
 	if ( ball.style == BALL7 )
@@ -55,17 +67,22 @@ void Score::add_ball( Ball& ball, int player_number )
 	}
 }
 
-void Score::draw( sf::RenderWindow& window, const int player_number )
+void Score::Draw( sf::RenderWindow& window, int player_number )
 {
+	players[player_number].text = sf::Text( player_names[player_number], font );
 	players[player_number].text.setColor( sf::Color::White );
 	players[player_number].text.setCharacterSize( MAJOR_FONT_SIZE );
+	players[1 - player_number].text = sf::Text( player_names[1 - player_number], font );
 	players[1 - player_number].text.setColor( sf::Color::Black );
 	players[1 - player_number].text.setCharacterSize( MINOR_FONT_SIZE );
+
+	players[0].text.setPosition( sf::Vector2f( window.getSize().x / 8.0f, window.getSize().y / 15.0f ) );
 	window.draw( players[0].text );
+	players[1].text.setPosition( sf::Vector2f( window.getSize().x * 2.0f / 3.0f, window.getSize().y / 15.0f ) );
 	window.draw( players[1].text );
 }
 
-std::vector<int> Score::getScore() const
+std::vector<int> Score::GetScore() const
 {
 	std::vector<int> temp_vector( 2 );
 	temp_vector[0] = players[0].score;

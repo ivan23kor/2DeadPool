@@ -1,23 +1,15 @@
-#include "billiard.hpp"
-#include "score.hpp"
+#include "Table.hpp"
+#include "Billiard.hpp"
+#include "Ball.hpp"
+#include "Score.hpp"
 #include "vector_operations.hpp"
 #include <cmath>
-#include <SFML/Graphics.hpp>
 #include <iostream>
 
-Billiard::Billiard()
-{
-	position = direction = sf::Vector2f( 0, 0 );
-	hit_power = 0.0;
-
-	// not visible until setHit called
-	is_visible = true;
-}
-
-Billiard::Billiard( const sf::Vector2f& position_, const sf::Vector2f& direction_, const std::string& filename )
+Billiard::Billiard( const sf::Vector2f& position_, const std::string& filename )
 {
 	position = position_;
-	direction = direction_;
+	direction = sf::Vector2f( 1, 0 );
 	hit_power = 0.0;
 
 	// graphical initialization
@@ -34,7 +26,7 @@ Billiard::Billiard( const sf::Vector2f& position_, const sf::Vector2f& direction
 
 Billiard::~Billiard() {}
 
-sf::Vector2f Billiard::setHit( sf::RenderWindow& window, Table& table, Score& score, int player_number )
+sf::Vector2f Billiard::SetHit( sf::RenderWindow& window, Table& table, Score& score, int player_number )
 {
 	sf::Vector2f return_value;
 	// make the billiard visible
@@ -79,8 +71,8 @@ sf::Vector2f Billiard::setHit( sf::RenderWindow& window, Table& table, Score& sc
 
 	        // displaying everything
 	        window.clear( sf::Color( 0, 100, 0, 0 ) );
-	        table.draw( window );
-	        score.draw( window, player_number );
+	        table.Draw( window );
+	        score.Draw( window, player_number );
 	        window.draw( powerBar );
 	        window.draw( powerBar_color );
 	        window.display();
@@ -112,8 +104,8 @@ sf::Vector2f Billiard::setHit( sf::RenderWindow& window, Table& table, Score& sc
 
 	    		// displaying everything
 		        window.clear( sf::Color( 0, 100, 0, 0 ) );
-		        table.draw( window );
-		        score.draw( window, player_number );
+		        table.Draw( window );
+		        score.Draw( window, player_number );
 		        window.draw( powerBar );
 		        window.draw( powerBar_color );
 		        window.display();
@@ -129,13 +121,13 @@ sf::Vector2f Billiard::setHit( sf::RenderWindow& window, Table& table, Score& sc
 	}
 
 	is_visible = false;
-	hitAnimation( window, table, score, player_number );
+	HitAnimation( window, table, score, player_number );
 	return_value = getNorm( direction ) * hit_power;
 	hit_power = 0.0;
 	return return_value;
 }
 
-void Billiard::hitAnimation( sf::RenderWindow& window, Table& table, Score& score, int player_number )
+void Billiard::HitAnimation( sf::RenderWindow& window, Table& table, Score& score, int player_number )
 {
 	int i = 0;
 	float step = 0.0;
@@ -160,14 +152,14 @@ void Billiard::hitAnimation( sf::RenderWindow& window, Table& table, Score& scor
 
 		// displaying everything
         window.clear( sf::Color( 0, 100, 0, 0 ) );
-        table.draw( window );
+        table.Draw( window );
         window.draw( sprite );
-        score.draw( window, player_number );
+        score.Draw( window, player_number );
         window.display();
 	}
 }
 
-void Billiard::draw( sf::RenderWindow& window, float ball_radius )
+void Billiard::Draw( sf::RenderWindow& window, float ball_radius )
 {
 	if ( is_visible )
 	{

@@ -1,7 +1,8 @@
-#include "ball.hpp"
-#include "table.hpp"
-#include "billiard.hpp"
-#include "score.hpp"
+#include "Game.hpp"
+#include "Table.hpp"
+#include "Ball.hpp"
+#include "Billiard.hpp"
+#include "Score.hpp"
 #include "vector_operations.hpp"
 #include <cmath>
 #include <iostream>
@@ -12,35 +13,19 @@
 #define WIN_SCORE 8
 #define SLEEP_TIME 20
 
-sf::Mutex mutex;
-
-void draw( sf::RenderWindow* window, Table& table, Score& score, int& player_number );
-int game( const sf::VideoMode& video_mode, Table& table, Score& score );
+void Draw( sf::RenderWindow* window, Table& table, Score& score, int& player_number );
+int GameStart( const std::vector<std::string>& player_names );
 
 int main(int argc, char const *argv[])
 {
-    // window initialization
-    const sf::VideoMode video_mode = sf::VideoMode::getDesktopMode();
-
-    // initialize a table
-    sf::Vector2f screen_center( video_mode.width / 2, video_mode.height * 11 / 20 );
-    const std::string table_file = "../bin/Table.png";
-    const std::string ball_file = "../bin/Balls.png";
-    const std::string billiard_file = "../bin/Billiard.png";
-    Table table( screen_center, sf::VideoMode::getDesktopMode(), table_file, ball_file, billiard_file );
-
-    // initialize a scoreboard
     std::vector<std::string> player_names(2);
     std::cout << "Input the name of the first player." << std::endl;
     std::cin >> player_names[0];
     std::cout << "Input the name of the second player." << std::endl;
     std::cin >> player_names[1];
-    
-    const std::string font_file = "../bin/Lithograph-Bold.ttf";
-    Score score( video_mode, player_names[0], player_names[1], font_file );
 
     // game start
-    int game_result = game( video_mode, table, score );
+    int game_result = GameStart( player_names );
     if ( game_result == EARLY_END )
         std::cout << "See ya later" << std::endl;
     else
@@ -83,8 +68,19 @@ int main(int argc, char const *argv[])
     }
 }*/
 
-int game( const sf::VideoMode& video_mode, Table& table, Score& score )
+int GameStart( const std::vector<std::string>& player_names )
 {
+    // window initialization
+    const sf::VideoMode video_mode = sf::VideoMode::getDesktopMode();
+    sf::RenderWindow window( video_mode, "2DeadPool", sf::Style::Fullscreen );
+
+    // table initialization
+    const std::string table_file = "../bin/Table.png";
+    const std::string ball_file = "../bin/Balls.png";
+    const std::string billiard_file = "../bin/Billiard.png";
+    const std::string font_file = "../bin/Lithograph-Bold.ttf";
+    Game game( video_mode, table_file, ball_file, billiard_file, player_names, font_file );
+
     // clock for the independence from CPU speed
     sf::Clock clock;
     sf::Time time = clock.getElapsedTime();
@@ -95,7 +91,8 @@ int game( const sf::VideoMode& video_mode, Table& table, Score& score )
     int turn_flag = 0;
     int cue_foul_flag = 0;
     int game_lost_flag = 0;
-    // specifies whose turn it is
+
+    // contains the player's number whose turn it is
     int player_number = 0;
 
     // needed for changing turns
@@ -109,12 +106,9 @@ int game( const sf::VideoMode& video_mode, Table& table, Score& score )
     // == 0 when player1 wins, ==1 otherwise
     int update_result = 0;
 
-    // create a window;
-    sf::RenderWindow window( video_mode, "2DeadPool", sf::Style::Fullscreen );
-
     // starting the thread that draws everything
-    //sf::Thread thread_draw( std::bind( &draw, &window, table, score, player_number ) );
-    //thread_draw.launch();
+    //sf::Thread ThreadDraw( std::bind( &Draw, &window, table, score, player_number ) );
+    //ThreadDraw.launch();
 
     // run the program as long as the window is open
     while ( 1 )
@@ -130,45 +124,46 @@ int game( const sf::VideoMode& video_mode, Table& table, Score& score )
                 break;
             }
         }
+        if ( !window.isOpen() )
+            break;
 
-        // if ball8 was shot earlier than all the player's balls
-        if ( ( game_lost_flag != 0 ) && table.balls_stopped() )
-            return 1 - player_number;
-
-        // check for game end
-        if ( ( score.getScore()[0] == WIN_SCORE ) && table.balls_stopped() )
-            return 0;
-        if ( ( score.getScore()[1] == WIN_SCORE ) && table.balls_stopped() )
-            return 1;
-
-        // changing turns check
-        if ( ( turn_flag != 0 || cue_foul_flag != 0 ) && table.balls_stopped() )
+        if ( game.table.BallsStopped() )
         {
-            current_score = score.getScore();
-            if ( cue_foul_flag != 0 )
-                player_number = 1 - player_number;
-            else if ( previous_score[player_number] == current_score[player_number] )
-                    player_number = 1 - player_number; 
-            previous_score = current_score;
-            cue_foul_flag = 0;
-            turn_flag = 0;
+        	// if ball8 was shot earlier than all the player's balls
+        	if ( game_lost_flag != 0 )
+        		return 1 - player_number;
+
+        	// check for game end
+	        if ( game.score.GetScore()[0] == WIN_SCORE )
+	            return 0;
+	        if ( game.score.GetScore()[1] == WIN_SCORE )
+	            return 1;
+
+	        // changing turns check
+	        if ( turn_flag != 0 || cue_foul_flag != 0 )
+	        {
+	            current_score = game.score.GetScore();
+	            if ( cue_foul_flag != 0 )
+	                player_number = 1 - player_number;
+	            else if ( previous_score[player_number] == current_score[player_number] )
+	                    player_number = 1 - player_number; 
+	            previous_score = current_score;
+	            cue_foul_flag = 0;
+	            turn_flag = 0;
+	        }
         }
 
         // set hit
-        if ( table.balls_stopped() == 1 )
+        if ( game.table.BallsStopped() == 1 )
         {
-            //sf::Mouse::isButtonPressed( sf::Mouse::Left )
-            table.setHit( window, score, player_number );
+            game.NextTurn( window, player_number );
             turn_flag = 1;
         }
-
         // table update
         time = clock.getElapsedTime();
         dt = time.asMicroseconds() - previous_time;
         previous_time = time.asMicroseconds();
-        update_result = table.update( 1.0f, score, player_number );
-        if ( !window.isOpen() )
-            break;
+        update_result = game.table.Update( 1.0f, game.score, player_number );
 
         // update return processing
         switch ( update_result )
@@ -178,13 +173,12 @@ int game( const sf::VideoMode& video_mode, Table& table, Score& score )
                 break;
             case CUE_BALL_FOUL:
                 cue_foul_flag = 1;
-                break;        
+                break;
         }
 
         // table display
         window.clear( sf::Color( 0, 100, 0, 0 ) );
-        table.draw( window );
-        score.draw( window, player_number );
+        game.Draw( window, player_number );
         window.display();
     }
 

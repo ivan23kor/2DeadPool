@@ -1,19 +1,14 @@
-#include "ball.hpp"
+#include "Table.hpp"
+#include "Ball.hpp"
 #include "vector_operations.hpp"
 #include <iostream>
 #include <cmath>
 
-Ball::Ball()
-{
-	position = velocity = sf::Vector2f( 0.0, 0.0 );
-	style = 0;
-}
-
-Ball::Ball( const sf::Vector2f& position_, const sf::Vector2f& velocity_, float radius_,
+Ball::Ball( const sf::Vector2f& position_, float radius_,
 	const std::string& name, int style_ )
 {
 	position = position_;
-	velocity = velocity_;
+	velocity = sf::Vector2f( 0, 0 );
 	radius = radius_;
 	style = style_;
 
@@ -65,7 +60,7 @@ Ball::Ball( const sf::Vector2f& position_, const sf::Vector2f& velocity_, float 
 Ball::~Ball() {}
 
 // returns 1 if the ball is still on the table, 0 if got into a pocket
-int Ball::update( float time, const Table& table )
+int Ball::Update( float time, const Table& table )
 {
 	// absolute value of the ball's velocity
 	float speed = sqrt( velocity.x * velocity.x + velocity.y * velocity.y );
@@ -157,7 +152,7 @@ int Ball::update( float time, const Table& table )
 	return 1;
 }
 
-void Ball::draw( sf::RenderWindow& window)
+void Ball::Draw( sf::RenderWindow& window)
 {
 	sprite.setTexture( texture );
 	sprite.setPosition( position - sf::Vector2f( radius, radius ) );
