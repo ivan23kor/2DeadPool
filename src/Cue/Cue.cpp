@@ -1,10 +1,10 @@
-#include "../Table/Table.hpp"
+#include <cmath>
+#include <iostream>
 #include "Cue.hpp"
+#include "../Table/Table.hpp"
 #include "../Ball/Ball.hpp"
 #include "../Score/Score.hpp"
 #include "../Vector_aux/vector_operations.hpp"
-#include <cmath>
-#include <iostream>
 
 Cue::Cue( const sf::Vector2f& position_, const std::string& filename )
 {
@@ -22,6 +22,9 @@ Cue::Cue( const sf::Vector2f& position_, const std::string& filename )
 
 	// not visible until setHit called
 	is_visible = true;
+
+	// loading hit sound from buffer
+	sound_buffer.loadFromFile( "src/Cue/Cue.wav" );
 }
 
 Cue::~Cue() {}
@@ -157,6 +160,12 @@ void Cue::HitAnimation( sf::RenderWindow& window, Table& table, Score& score, in
         score.Draw( window, player_number );
         window.display();
 	}
+
+	sf::Sound sound;
+	sound.setBuffer( sound_buffer );
+	sound.play();
+	sound.setVolume( hit_power / MAX_POWER * 100.0f );
+	while( sound.getStatus() == sf::Sound::Playing ) {}
 }
 
 void Cue::Draw( sf::RenderWindow& window, float ball_radius )

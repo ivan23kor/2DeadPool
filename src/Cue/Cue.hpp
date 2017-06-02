@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 
 #define Cue_SCALE .5f
 #define PI 3.1415926f
@@ -20,6 +21,8 @@ class Cue
 	sf::Texture texture;
 	sf::Sprite sprite;
 	bool is_visible;
+
+	sf::SoundBuffer sound_buffer;
 
 	sf::Vector2f SetHit( sf::RenderWindow& window, Table& table, Score& score, int player_number );
 	void HitAnimation( sf::RenderWindow& window, Table& table, Score& score, int player_number );

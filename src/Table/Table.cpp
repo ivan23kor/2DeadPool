@@ -1,5 +1,7 @@
 #include <cmath>
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include "Table.hpp"
 #include "../Score/Score.hpp"
 #include "../Vector_aux/vector_operations.hpp"
@@ -88,6 +90,17 @@ Table::Table( const sf::VideoMode& video_mode,	const std::string& table_file,
 
 	//Cue setup
 	cue.push_back( Cue( balls.back().position, cue_file ) );
+
+	sf::SoundBuffer temp;
+	std::string filename = "src/Table/Hit1.wav";
+	temp.loadFromFile( filename );
+	sound_buffer.push_back( temp );
+	filename = "src/Table/Hit2.wav";
+	temp.loadFromFile( filename );
+	sound_buffer.push_back( temp );
+	filename = "src/Table/Hit3.wav";
+	temp.loadFromFile( filename );
+	sound_buffer.push_back( temp );
 }
 
 Table::Table( const Table& table )
@@ -113,6 +126,9 @@ int Table::Update( float time, Score& score, int& player_number )
     sf::Vector2f delta_velocity( 0, 0 );
     bool zero_score = ( score.players[0].score == 0 ) && ( score.players[1].score == 0 );
     int function_return = OK;
+    int sound_select = 0;
+
+    std::srand( std::time( 0 ) );
 
 	// balls' positions update
     for (int i = 0; i < balls.size(); ++i)
@@ -127,6 +143,12 @@ int Table::Update( float time, Score& score, int& player_number )
                 delta_velocity = getNorm( rel_distance ) * getScalar( vel_difference, getNorm( rel_distance ) );
                 balls[i].velocity += delta_velocity * BALL_REFLECTION;
                 balls[j].velocity -= delta_velocity * BALL_REFLECTION;
+
+                // hit sound setup
+                sound_select = std::rand() % 3;
+                sound.setBuffer( sound_buffer[sound_select] );
+                sound.setVolume( getLength( delta_velocity ) * SOUND_VOLUME );
+                sound.play();
             }
         }
 

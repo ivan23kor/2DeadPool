@@ -13,7 +13,7 @@ SCORE_PATH = $(SRC)Score/
 SCORE = Score
 VECTOR_PATH = $(SRC)Vector_aux/
 VECTOR = vector_operations
-KEY = -std=c++11 -lm -lsfml-graphics -lsfml-window -lsfml-system
+KEY = -std=c++11 -lm -lsfml-graphics -lsfml-audio -lsfml-window -lsfml-system
 
 all : clean $(MAIN)
 $(MAIN) : $(OBJ)$(MAIN).o $(OBJ)$(GAME).o $(OBJ)$(TABLE).o $(OBJ)$(BALL).o\

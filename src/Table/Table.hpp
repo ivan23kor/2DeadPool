@@ -1,5 +1,6 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include "../Ball/Ball.hpp"
 #include "../Cue/Cue.hpp"
 
@@ -7,6 +8,8 @@
 #define SCALE_X	1.16047
 #define SCALE_Y 1.22555
 #define CUE_BALL 15
+#define SOUND_VOLUME 40
+#define SOUND_COUNT 3
 #define GAME_LOST -1
 #define OK 0
 #define CUE_BALL_FOUL 2
@@ -27,6 +30,9 @@ class Table
 	// graphical properties
 	sf::Texture texture;
 	sf::Sprite sprite;
+
+	std::vector<sf::SoundBuffer> sound_buffer;
+	sf::Sound sound;
 
 	friend class Ball;
 	friend class Cue;
