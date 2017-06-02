@@ -89,7 +89,6 @@ int Game::Update( float time )
                 // hit sound setup
                 sound.setBuffer( ball_sound_buffer[sound_select] );
                 sound.setVolume( getLength( delta_velocity ) * SOUND_VOLUME + MIN_VOLUME);
-                std::cout << getLength( delta_velocity ) * SOUND_VOLUME  + MIN_VOLUME << std::endl;
                 sound.play();
             }
         }
