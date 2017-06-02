@@ -2,7 +2,7 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 
-#define Cue_SCALE .5f
+#define CUE_SCALE .5f
 #define PI 3.1415926f
 #define MAX_POWER 5
 #define MIN_POWER .1f

@@ -7,12 +7,6 @@
 #define BALL_COUNT 16
 #define SCALE_X	1.16047
 #define SCALE_Y 1.22555
-#define CUE_BALL 15
-#define SOUND_VOLUME 40
-#define SOUND_COUNT 3
-#define GAME_LOST -1
-#define OK 0
-#define CUE_BALL_FOUL 2
 
 class Score;
 
@@ -31,9 +25,6 @@ class Table
 	sf::Texture texture;
 	sf::Sprite sprite;
 
-	std::vector<sf::SoundBuffer> sound_buffer;
-	sf::Sound sound;
-
 	friend class Ball;
 	friend class Cue;
 	friend class Game;
@@ -51,7 +42,7 @@ public:
 	return values: GAME_LOST when the 8ball was shot earlier the others
 	CUE_BALL_FOUL when the cue ball was shot
 	OK when either some balls got into pockets or nothing special*/
-	int Update( float time, Score& score, int& player_number );
+	//int Update( float time, Score& score, int& player_number );
 	int BallsStopped() const;  			// stop_flag == 1 when all balls' velocities are null
 	void SetHit( sf::RenderWindow& window, Score& score, int player_number );	//assigns the hit to the cue ball
 	void Draw( sf::RenderWindow& window );	// draws the table

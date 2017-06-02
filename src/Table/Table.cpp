@@ -90,17 +90,6 @@ Table::Table( const sf::VideoMode& video_mode,	const std::string& table_file,
 
 	//Cue setup
 	cue.push_back( Cue( balls.back().position, cue_file ) );
-
-	sf::SoundBuffer temp;
-	std::string filename = "src/Table/Hit1.wav";
-	temp.loadFromFile( filename );
-	sound_buffer.push_back( temp );
-	filename = "src/Table/Hit2.wav";
-	temp.loadFromFile( filename );
-	sound_buffer.push_back( temp );
-	filename = "src/Table/Hit3.wav";
-	temp.loadFromFile( filename );
-	sound_buffer.push_back( temp );
 }
 
 Table::Table( const Table& table )
@@ -119,84 +108,6 @@ Table::Table( const Table& table )
 
 Table::~Table()	{}
 
-int Table::Update( float time, Score& score, int& player_number )
-{
-    sf::Vector2f rel_distance( 0, 0 );
-    sf::Vector2f vel_difference( 0, 0 );
-    sf::Vector2f delta_velocity( 0, 0 );
-    bool zero_score = ( score.players[0].score == 0 ) && ( score.players[1].score == 0 );
-    int function_return = OK;
-    int sound_select = 0;
-
-    std::srand( std::time( 0 ) );
-
-	// balls' positions update
-    for (int i = 0; i < balls.size(); ++i)
-    {
-        for (int j = i + 1; j < balls.size(); ++j)
-        {
-            rel_distance = balls[j].position - balls[i].position;
-            vel_difference = balls[j].velocity - balls[i].velocity;
-            if ( ( balls[i].radius + balls[j].radius
-                - getLength( rel_distance ) > 0.0 ) && ( getScalar( vel_difference, rel_distance ) < 0.0 ) )
-            {
-                delta_velocity = getNorm( rel_distance ) * getScalar( vel_difference, getNorm( rel_distance ) );
-                balls[i].velocity += delta_velocity * BALL_REFLECTION;
-                balls[j].velocity -= delta_velocity * BALL_REFLECTION;
-
-                // hit sound setup
-                sound_select = std::rand() % 3;
-                sound.setBuffer( sound_buffer[sound_select] );
-                sound.setVolume( getLength( delta_velocity ) * SOUND_VOLUME );
-                sound.play();
-            }
-        }
-
-        if ( balls[i].Update( time, *this ) == 0 )
-        {
-        	if ( zero_score )
-        	{
-        		zero_score = false;
-        		if ( i < 7 )
-        		{
-        			score.players[1 - player_number].ball_type = 1;
-        			score.AddBall( balls[i], player_number );
-        		}
-    			else if ( i == CUE_BALL )
-    			{
-        			balls[i].position = sf::Vector2f( -1, -1 ) * balls[i].radius;
-        			function_return = CUE_BALL_FOUL;
-    			}
-    			else if ( i == 7 )
-    			{
-    				score.AddBall( balls[i], player_number );
-    				function_return = GAME_LOST;
-    			}
-        		else
-        		{
-    				score.players[player_number].ball_type = 1;
-    				score.AddBall( balls[i], player_number );
-    			}
-        	}
-        	else if ( i == CUE_BALL )
-        	{
-        		balls[i].position = sf::Vector2f( -1, -1 ) * balls[i].radius;
-        		if ( function_return != GAME_LOST )
-        			function_return = CUE_BALL_FOUL;
-        	}
-        	else if ( ( i == BALL7 ) && ( score.players[player_number].score != BALL7 ) )
-        		{
-        			score.AddBall( balls[i], player_number );
-        			function_return = GAME_LOST;
-        		}
-        	else
-       			score.AddBall( balls[i], player_number );
-        }
-    }
-
-    return function_return;
-}
-
 int Table::BallsStopped() const
 {
 	int stop_flag = 1;
@@ -211,10 +122,10 @@ int Table::BallsStopped() const
 void Table::SetCueBall( sf::RenderWindow& window, Score& score, int player_number )
 {
 	sf::Vector2f possible_position;
-	float left_border = this->borders[11].x + balls[CUE_BALL].radius;
-	float right_border = this->borders[4].x - balls[CUE_BALL].radius;
-	float upper_border = this->borders[0].y + balls[CUE_BALL].radius;
-	float lower_border = this->borders[9].y - balls[CUE_BALL].radius;
+	float left_border = this->borders[11].x + balls.back().radius;
+	float right_border = this->borders[4].x - balls.back().radius;
+	float upper_border = this->borders[0].y + balls.back().radius;
+	float lower_border = this->borders[9].y - balls.back().radius;
 
 	while ( 1 )
 	{
@@ -248,9 +159,9 @@ void Table::SetCueBall( sf::RenderWindow& window, Score& score, int player_numbe
 
     		// check for other balls on the same place
     		for (int i = 0; i < balls.size() - 1; ++i)
-    			if ( getInterval( possible_position, balls[i].position ) < balls[CUE_BALL].radius * 2.0f )
-    				possible_position = sf::Vector2f( -1, -1 ) * balls[CUE_BALL].radius;
-    		balls[CUE_BALL].position = possible_position;
+    			if ( getInterval( possible_position, balls[i].position ) < balls.back().radius * 2.0f )
+    				possible_position = sf::Vector2f( -1, -1 ) * balls.back().radius;
+    		balls.back().position = possible_position;
 
     		// table display
 	        window.clear( sf::Color( 0, 100, 0, 0 ) );
@@ -262,7 +173,7 @@ void Table::SetCueBall( sf::RenderWindow& window, Score& score, int player_numbe
     			break;
     	}
     
-    	if ( balls[CUE_BALL].position == sf::Vector2f( -1 , -1 ) * balls[CUE_BALL].radius )
+    	if ( balls.back().position == sf::Vector2f( -1 , -1 ) * balls.back().radius )
     	{
     		while ( 1 )
 	    	{
@@ -294,7 +205,7 @@ void Table::SetHit( sf::RenderWindow& window, Score& score, int player_number )
 {
     sf::Vector2f hit_velocity( 0, 0 );
 
-    if ( balls[CUE_BALL].position == sf::Vector2f( -1, -1 ) * balls[CUE_BALL].radius )
+    if ( balls.back().position == sf::Vector2f( -1, -1 ) * balls.back().radius )
 		this->SetCueBall( window, score, player_number );
 
     // hit setup
@@ -320,7 +231,7 @@ void Table::SetHit( sf::RenderWindow& window, Score& score, int player_number )
         score.Draw( window, player_number );
         window.display();
     }
-    cue[0].position = balls[CUE_BALL].position;
+    cue[0].position = balls.back().position;
     hit_velocity = cue[0].SetHit( window, *this, score, player_number );
     balls.back().velocity = hit_velocity;
 }
@@ -331,5 +242,5 @@ void Table::Draw( sf::RenderWindow& window )
     window.draw( sprite );
     for (int i = 0; i < balls.size(); ++i)
 		balls[i].Draw( window );
-	cue[0].Draw( window, balls[CUE_BALL].radius );
+	cue[0].Draw( window, balls.back().radius );
 }

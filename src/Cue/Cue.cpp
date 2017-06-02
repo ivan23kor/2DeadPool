@@ -15,7 +15,7 @@ Cue::Cue( const sf::Vector2f& position_, const std::string& filename )
 	// graphical initialization
 	texture.loadFromFile( filename );
 	sf::Vector2f size( texture.getSize() );
-	sprite.setScale( sf::Vector2f( Cue_SCALE, Cue_SCALE ) );
+	sprite.setScale( sf::Vector2f( CUE_SCALE, CUE_SCALE ) );
 	sprite.setTexture( texture );
 	sprite.setPosition( position );
 	sprite.setRotation( 90 + atan2f( direction.x, direction.y ) * 180 / PI );
@@ -24,7 +24,7 @@ Cue::Cue( const sf::Vector2f& position_, const std::string& filename )
 	is_visible = true;
 
 	// loading hit sound from buffer
-	sound_buffer.loadFromFile( "src/Cue/Cue.wav" );
+	sound_buffer.loadFromFile( "resources/Audio/Cue.wav" );
 }
 
 Cue::~Cue() {}
@@ -163,7 +163,7 @@ void Cue::HitAnimation( sf::RenderWindow& window, Table& table, Score& score, in
 
 	sf::Sound sound;
 	sound.setBuffer( sound_buffer );
-	sound.play();
+	//sound.play();
 	sound.setVolume( hit_power / MAX_POWER * 100.0f );
 	while( sound.getStatus() == sf::Sound::Playing ) {}
 }
