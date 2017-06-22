@@ -32,17 +32,22 @@ Cue::~Cue() {}
 sf::Vector2f Cue::SetHit( sf::RenderWindow& window, Table& table, Score& score, int player_number )
 {
 	sf::Vector2f return_value;
-	// make the Cue visible
-	is_visible = true;
 
 	sf::Vector2f mouse_position = sf::Vector2f( sf::Mouse::getPosition( window ) );
-	float initial_power = getLength( mouse_position - position );			// zero hit power level
+	float initial_power = getLength( mouse_position - position )
+		* getLength( mouse_position - position ) / POWER_COEFF;
+	float hint_length = 1000.0;
+	sf::Vertex hint[] =
+	{
+	    sf::Vertex( position ),
+	    sf::Vertex( position + direction * hint_length )
+	};
 
 	// power bar
-	sf::RectangleShape powerBar( sf::Vector2f( window.getSize().x / 20, window.getSize().y / 3 ) );
+	/*sf::RectangleShape powerBar( sf::Vector2f( window.getSize().x / 20, window.getSize().y / 3 ) );
 	powerBar.setPosition( sf::Vector2f( window.getSize().x * .925, window.getSize().y * .5 ) );
 	sf::RectangleShape powerBar_color;
-	powerBar_color.setFillColor( sf::Color( 255, 0, 0 ) );
+	powerBar_color.setFillColor( sf::Color( 255, 0, 0 ) );*/
 
 	while ( 1 )
 	{
@@ -61,23 +66,20 @@ sf::Vector2f Cue::SetHit( sf::RenderWindow& window, Table& table, Score& score, 
 	        }
 			// retrieving the hit power
 			mouse_position = sf::Vector2f( sf::Mouse::getPosition( window ) );
-			hit_power = ( getLength( mouse_position - position ) - initial_power ) / 5;
+			hit_power = getLength( mouse_position - position ) * getLength(
+				mouse_position - position ) / POWER_COEFF - initial_power;
 			if ( hit_power > MAX_POWER )
 	        	hit_power = MAX_POWER;
 	        if ( hit_power < 0.0 )
 	        	hit_power = 0.0;
 
-	        // power bar setup
-			powerBar_color.setSize( sf::Vector2f( powerBar.getSize().x,	powerBar.getSize().y * hit_power / MAX_POWER ) );
-			powerBar_color.setPosition( sf::Vector2f( window.getSize().x * .925, 
-				window.getSize().y * 5 / 6 - powerBar.getSize().y * hit_power / MAX_POWER ) );
+	        hint[1] = sf::Vertex( position + direction * hint_length );
 
 	        // displaying everything
 	        window.clear( sf::Color( 0, 100, 0, 0 ) );
 	        table.Draw( window );
 	        score.Draw( window, player_number );
-	        window.draw( powerBar );
-	        window.draw( powerBar_color );
+	        window.draw( hint, 2, sf::Lines);
 	        window.display();
 
 	        if ( !sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
@@ -89,7 +91,7 @@ sf::Vector2f Cue::SetHit( sf::RenderWindow& window, Table& table, Score& score, 
 		if ( hit_power < MIN_POWER )
 			while ( 1 )
 			{
-				// check all the window's events that were triggered since the last iteration of the loop
+				// check all the window's events that have been triggered
 		        sf::Event event;
 		        while ( window.pollEvent( event ) )
 		        {
@@ -109,13 +111,12 @@ sf::Vector2f Cue::SetHit( sf::RenderWindow& window, Table& table, Score& score, 
 		        window.clear( sf::Color( 0, 100, 0, 0 ) );
 		        table.Draw( window );
 		        score.Draw( window, player_number );
-		        window.draw( powerBar );
-		        window.draw( powerBar_color );
 		        window.display();
 			}
 
 		mouse_position = sf::Vector2f( sf::Mouse::getPosition( window ) );
-		initial_power = getLength( mouse_position - position );
+		initial_power = getLength( mouse_position - position )
+			* getLength( mouse_position - position ) / POWER_COEFF;
 
 		if ( !sf::Mouse::isButtonPressed( sf::Mouse::Left ) )
 			break;

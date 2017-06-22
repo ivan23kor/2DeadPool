@@ -5,7 +5,7 @@
 Game::Game( const sf::VideoMode& video_mode, const std::string& table_file, const std::string& ball_file,
 		const std::string& Cue_file, const std::vector<std::string>& player_names, const std::string& font_file )
 {
-    current_player = 0;
+    current_player = 1;
 	table = Table( video_mode, table_file, ball_file, Cue_file );
 	score = Score( video_mode, player_names, font_file );
 
@@ -13,12 +13,6 @@ Game::Game( const sf::VideoMode& video_mode, const std::string& table_file, cons
     std::string filename = "resources/Audio/Hit1.wav";
     temp.loadFromFile( filename );
     ball_sound_buffer.push_back( temp );
-    /*filename = "resources/Audio/Hit2.wav";
-    temp.loadFromFile( filename );
-    ball_sound_buffer.push_back( temp );
-    filename = "resources/Audio/Hit3.wav";
-    temp.loadFromFile( filename );
-    ball_sound_buffer.push_back( temp );*/
 }
 
 Game::~Game() {}
@@ -29,6 +23,10 @@ void Game::NextTurn( sf::RenderWindow& window )
 
     if ( table.balls.back().position == sf::Vector2f( -1, -1 ) * table.balls.back().radius )
 		table.SetCueBall( window, score, current_player );
+
+    table.cue[0].position = table.balls.back().position;
+    table.cue[0].is_visible = true;
+    
     // hit setup
     while ( 1 )
     {
@@ -54,23 +52,18 @@ void Game::NextTurn( sf::RenderWindow& window )
         window.display();
     }
 
-    table.cue[0].position = table.balls.back().position;
     hit_velocity = table.cue[0].SetHit( window, table, score, current_player );
     table.balls.back().velocity = hit_velocity;
 }
 
 int Game::Update( float time )
 {
-    // for balls collisions
+    // for balls' collisions
     sf::Vector2f rel_distance( 0, 0 );
     sf::Vector2f vel_difference( 0, 0 );
     sf::Vector2f delta_velocity( 0, 0 );
 
     int function_return = OK;
-
-    // hit sound effects setup
-    int sound_select = 0;
-    std::srand( std::time( 0 ) );
 
     // balls' positions update
     for (int i = 0; i < table.balls.size(); ++i)
@@ -87,7 +80,7 @@ int Game::Update( float time )
                 table.balls[j].velocity -= delta_velocity * BALL_REFLECTION;
 
                 // hit sound setup
-                sound.setBuffer( ball_sound_buffer[sound_select] );
+                sound.setBuffer( ball_sound_buffer[0] );
                 sound.setVolume( getLength( delta_velocity ) * SOUND_VOLUME + MIN_VOLUME);
                 sound.play();
             }

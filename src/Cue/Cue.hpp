@@ -4,9 +4,10 @@
 
 #define CUE_SCALE .5f
 #define PI 3.1415926f
-#define MAX_POWER 5
-#define MIN_POWER .1f
-#define PULL_BACK 20.0f
+#define MAX_POWER 5.5
+#define MIN_POWER .2f
+#define POWER_COEFF 3000
+#define PULL_BACK 30.0f
 #define ANIMATION_STEP 1e-5f
 
 class Table;

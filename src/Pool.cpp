@@ -13,11 +13,11 @@
 #define WIN_SCORE 8
 #define SLEEP_TIME 20
 
-void Draw( sf::RenderWindow* window, Table& table, Score& score, int& current_player );
 int GameStart( const std::vector<std::string>& player_names );
 
 int main(int argc, char const *argv[])
 {
+    // music playing on the background
     float background_volume = 50.0;
     sf::Music background_music;
     if ( !background_music.openFromFile( "resources/Audio/C418.wav" ) )
@@ -25,14 +25,15 @@ int main(int argc, char const *argv[])
     background_music.setVolume( background_volume );
     background_music.play();
 
+    // game start
     std::vector<std::string> player_names(2);
     std::cout << "Input the name of the first player." << std::endl;
     std::cin >> player_names[0];
     std::cout << "Input the name of the second player." << std::endl;
     std::cin >> player_names[1];
-
-    // game start
     int game_result = GameStart( player_names );
+
+    // game result print
     if ( game_result == EARLY_END )
         std::cout << "See ya later" << std::endl;
     else
@@ -40,40 +41,6 @@ int main(int argc, char const *argv[])
 
 	return 0;
 }
-
-/*void draw( sf::RenderWindow* window, Table& table, Score& score, int& current_player )
-{
-    // run the program as long as the window is open
-    while ( 1 )
-    {
-        mutex.lock();
-        if ( window->isOpen() )
-        {
-            // check all the window's events that were triggered since the last iteration of the loop
-            sf::Event event; 
-            while ( window->pollEvent( event ) )
-            {
-                // close the window if closure was triggered
-                if ( event.type == sf::Event::Closed )
-                    window->close();
-            }
-
-            // table display
-            window->clear( sf::Color( 0, 100, 0, 0 ) );
-            table.draw( *window );
-            score.draw( *window, current_player );
-            window->display();
-            mutex.unlock();
-            sf::sleep( sf::milliseconds( SLEEP_TIME ) );
-        }
-        else
-        {
-            mutex.unlock();
-            sf::sleep( sf::milliseconds( SLEEP_TIME ) );
-            return;
-        }
-    }
-}*/
 
 int GameStart( const std::vector<std::string>& player_names )
 {
@@ -95,8 +62,8 @@ int GameStart( const std::vector<std::string>& player_names )
     float previous_time = time.asMicroseconds();
     float dt = 0.0;
 
-    // flags for turns change
-    int turn_flag = 0;
+    // update_result function return is stored here
+    int update_result = 0;
     int cue_foul_flag = 0;
     int game_lost_flag = 0;
 
@@ -107,13 +74,6 @@ int GameStart( const std::vector<std::string>& player_names )
     std::vector<int> current_score( 2 );
     current_score[0] = 0;
     current_score[1] = 0;
-
-    // == 0 when player1 wins, ==1 otherwise
-    int update_result = 0;
-
-    // starting the thread that draws everything
-    //sf::Thread ThreadDraw( std::bind( &Draw, &window, table, score, current_player ) );
-    //ThreadDraw.launch();
 
     // run the program as long as the window is open
     while ( 1 )
@@ -132,53 +92,43 @@ int GameStart( const std::vector<std::string>& player_names )
         if ( !window.isOpen() )
             break;
 
-        if ( game.table.BallsStopped() )
-        {
-        	// if ball8 was shot earlier than all the player's balls
-        	if ( game_lost_flag != 0 )
-        		return 1 - game.current_player;
-
-        	// check for game end
-	        if ( game.score.GetScore()[0] == WIN_SCORE )
-	            return 0;
-	        if ( game.score.GetScore()[1] == WIN_SCORE )
-	            return 1;
-
-	        // changing turns check
-	        if ( turn_flag != 0 || cue_foul_flag != 0 )
-	        {
-	            current_score = game.score.GetScore();
-	            if ( cue_foul_flag != 0 )
-	                game.current_player = 1 - game.current_player;
-	            else if ( previous_score[game.current_player] == current_score[game.current_player] )
-	                    game.current_player = 1 - game.current_player; 
-	            previous_score = current_score;
-	            cue_foul_flag = 0;
-	            turn_flag = 0;
-	        }
-        }
-
-        // set hit
-        if ( game.table.BallsStopped() == 1 )
-        {
-            game.NextTurn( window );
-            turn_flag = 1;
-        }
-        // table update
+        /*// table update
         time = clock.getElapsedTime();
         dt = time.asMicroseconds() - previous_time;
-        previous_time = time.asMicroseconds();
+        previous_time = time.asMicroseconds();*/
         update_result = game.Update( 1.0f );
 
-        // update return processing
-        switch ( update_result )
+        // update_result processing
+        if ( update_result == GAME_LOST)
+            game_lost_flag = 1;
+        if ( update_result == CUE_BALL_FOUL)
+            cue_foul_flag = 1;
+
+        // checks for turns' change
+        if ( game.table.BallsStopped() )
         {
-            case GAME_LOST:
-                game_lost_flag = 1;
-                break;
-            case CUE_BALL_FOUL:
-                cue_foul_flag = 1;
-                break;
+            // if ball8 was shot earlier than all the player's balls
+            if ( game_lost_flag != 0 )
+                return 1 - game.current_player;
+
+            current_score = game.score.GetScore();
+            if ( cue_foul_flag != 0 )
+            {
+                game.current_player = 1 - game.current_player;
+                cue_foul_flag = 0;
+            }
+            else if ( previous_score[game.current_player] == current_score[game.current_player] )
+                game.current_player = 1 - game.current_player;
+            previous_score = current_score;
+
+            // check for game end
+            if ( game.score.GetScore()[0] == WIN_SCORE )
+                return 0;
+            if ( game.score.GetScore()[1] == WIN_SCORE )
+                return 1;
+
+            // set hit
+            game.NextTurn( window );
         }
 
         // table display

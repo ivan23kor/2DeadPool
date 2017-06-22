@@ -21,6 +21,8 @@ public:
 	std::vector<sf::SoundBuffer> ball_sound_buffer;
 	sf::Sound sound;
 
+	sf::RenderWindow window;
+
 	Game( const sf::VideoMode& video_mode, const std::string& table_file, const std::string& ball_file,
 		const std::string& Cue_file, const std::vector<std::string>& player_names, const std::string& font_file );
 	~Game();

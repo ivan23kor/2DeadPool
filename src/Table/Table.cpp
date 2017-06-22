@@ -157,6 +157,12 @@ void Table::SetCueBall( sf::RenderWindow& window, Score& score, int player_numbe
     		if ( possible_position.y > lower_border )
     			possible_position.y = lower_border;
 
+    		// check for in-pocket placement
+    		for (int i = 0; i < pockets.size(); ++i)
+    			if ( ( i != 1 ) && ( i != 4 ) && ( getInterval( possible_position,
+    				pockets[i] ) < corner_radius * IN_POCKET ) )
+   				possible_position = pockets[i] + ( possible_position - pockets[i] ) * IN_POCKET;
+
     		// check for other balls on the same place
     		for (int i = 0; i < balls.size() - 1; ++i)
     			if ( getInterval( possible_position, balls[i].position ) < balls.back().radius * 2.0f )

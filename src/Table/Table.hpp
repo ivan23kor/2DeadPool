@@ -7,6 +7,7 @@
 #define BALL_COUNT 16
 #define SCALE_X	1.16047
 #define SCALE_Y 1.22555
+#define IN_POCKET 1.5f
 
 class Score;
 
