@@ -3,7 +3,7 @@
 
 #define BALL_RADIUS 37
 #define MIN_SPEED 1e-2f
-#define FRICTION 23e-5f
+#define FRICTION 23e-4f
 #define BORDER_REFLECTION .6f
 #define BALL_REFLECTION .75f
 
